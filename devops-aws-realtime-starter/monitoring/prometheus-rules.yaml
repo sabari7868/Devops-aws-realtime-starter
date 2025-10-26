@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: realtime-alerts
+  namespace: monitoring
+spec:
+  groups:
+  - name: realtime.rules
+    rules:
+    - alert: HighWebsocketConnections
+      expr: websocket_connections > 1000
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High websocket connections ({{ $value }})"
+        description: "Websocket connections > 1000 for more than 2 minutes."
+
+    - alert: PodRestartingTooOften
+      expr: increase(kube_pod_container_status_restarts_total[10m]) > 3
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod restarting frequently"
+
+    - alert: HighCPUUsage
+      expr: sum by(pod)(rate(container_cpu_usage_seconds_total{image!=""}[2m])) > 0.8
+      for: 3m
+      labels:
+        severity: warning
